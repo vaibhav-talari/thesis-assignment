@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Gen {
+public class DataGenerator {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		try (ServerSocket ss = new ServerSocket(1234);
