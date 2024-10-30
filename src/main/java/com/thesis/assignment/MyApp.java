@@ -24,9 +24,10 @@ public class MyApp {
 		DataStream<String> text = env.socketTextStream(hostName, port);
 		
 		try {
-			List<Integer> collect = amounts.filter(a -> a > threshold).reduce((integer, t1) -> integer + t1).collect();
+			text.print();
+			//List<Integer> collect = amounts.filter(a -> a > threshold).reduce((integer, t1) -> integer + t1).collect();
 
-			System.out.println(collect);
+			//System.out.println(collect);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
