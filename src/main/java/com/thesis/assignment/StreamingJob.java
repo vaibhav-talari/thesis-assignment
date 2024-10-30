@@ -19,6 +19,7 @@ package com.thesis.assignment;
  */
 
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.datastream.DataStream;
 
 
 /**
@@ -46,7 +47,7 @@ public class StreamingJob {
 	public static void main(String[] args) throws Exception {
 		// set up the streaming execution environment
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
+		DataStream<String> dataStream =env.socketTextStream("localhost",1234);
 		/**
 		 * Here, you can start creating your execution plan for Flink.
 		 *
@@ -68,6 +69,7 @@ public class StreamingJob {
 		 */
 
 		// execute program
-		env.execute("Flink Streaming Java API Skeleton");
+		dataStream.print();
+		env.execute("Flink Streaming Java API Test");
 	}
 }
