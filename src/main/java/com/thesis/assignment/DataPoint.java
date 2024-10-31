@@ -16,7 +16,18 @@ public class DataPoint {
     }
     public String toString() {
 
-        return this.houseId + ", " + this.timestamp + ", " + this.powerReading;
+        return this.houseId + ", " + timestamp_toDate(this.timestamp) + ", " + this.powerReading;
+
+    }
+
+    private String timestamp_toDate(long timestamp) {
+        Instant instant = Instant.ofEpochMilli(timestamp);
+        LocalDateTime localDateTime =
+                LocalDateTime.ofInstant(instant, ZoneId.of("UTC"));
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedDateTime = localDateTime.format(formatter);
+        return formattedDateTime;
 
     }
 
