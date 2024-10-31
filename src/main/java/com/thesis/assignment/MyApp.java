@@ -3,6 +3,7 @@ package com.thesis.assignment;
 import java.util.List;
 
 import org.apache.flink.api.java.DataSet;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -22,11 +23,17 @@ public class MyApp {
 		// ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 		env.setParallelism(parallel);
 		
-		DataStream<String> text = env.socketTextStream(hostName, port);
+		//DataStream<String> text = env.socketTextStream(hostName, port);
+		
+		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+		env.getConfig().setAutoWatermarkInterval(1000L);
+
+		DataStream<EMeterEvent> dataStream = env.addSource(new HousehDataGen())
+				.assignTimestampsAndWatermarks(new EventWaterMarker());
 		
 		
 		try {
-			text.print();
+			//dataStream.();
 			env.execute("Testing my app");
 			
 			//List<Integer> collect = amounts.filter(a -> a > threshold).reduce((integer, t1) -> integer + t1).collect();
