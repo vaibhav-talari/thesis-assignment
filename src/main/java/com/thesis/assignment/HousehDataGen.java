@@ -1,18 +1,18 @@
 package com.thesis.assignment;
-//import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
-import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
-
-import javax.xml.crypto.Data;
 import java.util.Calendar;
 import java.util.Random;
 
-public class HousehDataGen extends RichSourceFunction<DataPoint> {
+//import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
+import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 
-    private boolean running = true;
+public class HousehDataGen extends RichSourceFunction<EMeterEvent> {
+
+	private static final long serialVersionUID = 1L;
+	private boolean running = true;
     private final Calendar cal = Calendar.getInstance();
 
     @Override
-    public void run(SourceContext<DataPoint> sourceContext) throws Exception {
+    public void run(SourceContext<EMeterEvent> sourceContext) throws Exception {
         Random rand = new Random();
 
         // prepare ids
@@ -34,7 +34,7 @@ public class HousehDataGen extends RichSourceFunction<DataPoint> {
             for (int i = 0; i < 10; i++) {
                 powerRead[i] = 10 + (rand.nextGaussian() * 20);
 
-                sourceContext.collect(new DataPoint(houseIds[i], timestamp, powerRead[i]));
+                sourceContext.collect(new EMeterEvent(houseIds[i], timestamp, powerRead[i]));
             }
 
             // proceed in time
