@@ -164,7 +164,7 @@ under the License.
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>
-										com.thesis.assignment.LimitedEventTester</mainClass>
+										com.thesis.assignment.AssignmentMain</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>

@@ -6,41 +6,41 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 public class EMeterEvent {
-	private String houseId;
-	private long timestamp;
-	private double power;
+	private Long houseId;
+	private Long timestamp;
+	private Double power;
 
 	public EMeterEvent() {
 	}
 
-	public EMeterEvent(String id, long timestamp, double power) {
-		this.houseId = id;
+	public EMeterEvent(Long houseId, Long timestamp, Double power) {
+		super();
+		this.houseId = houseId;
 		this.timestamp = timestamp;
 		this.power = power;
-
 	}
 
-	public String getHouseId() {
+	public Long getHouseId() {
 		return houseId;
 	}
 
-	public void setHouseId(String houseId) {
+	public void setHouseId(Long houseId) {
 		this.houseId = houseId;
 	}
 
-	public long getTimestamp() {
+	public Long getTimestamp() {
 		return timestamp;
 	}
 
-	public void setTimestamp(long timestamp) {
+	public void setTimestamp(Long timestamp) {
 		this.timestamp = timestamp;
 	}
 
-	public double getPower() {
+	public Double getPower() {
 		return power;
 	}
 
-	public void setPower(double power) {
+	public void setPower(Double power) {
 		this.power = power;
 	}
 

@@ -1,5 +1,6 @@
 package com.thesis.assignment;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -9,30 +10,36 @@ import java.time.format.DateTimeFormatter;
 import java.util.OptionalDouble;
 import java.util.stream.StreamSupport;
 
-import org.apache.flink.streaming.api.TimeCharacteristic;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.connector.datagen.source.DataGeneratorSource;
+import org.apache.flink.connector.datagen.source.GeneratorFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.source.SourceFunction;
-import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
-import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 
 public class LimitedEventTester {
 
 	public static void main(String[] args) throws Exception {
-		// Set up the execution environment
+		long eventLimit = 30;
+		// by default event time
+		// 1 second interval for watermark
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 		env.getConfig().setAutoWatermarkInterval(1000L);
 
-		// Add a custom source with a limited number of events
-		DataStream<Event> limitedSourceStream = env.addSource(new LimitedEventSource(100))
-				.assignTimestampsAndWatermarks(new EventMarker()); // limit to 5 events
+		DataGeneratorSource<Event> source = new DataGeneratorSource<>(new EventGenerator(), eventLimit,
+				TypeInformation.of(Event.class));
 
-		DataStream<Double> avgPower = limitedSourceStream.keyBy(point -> point.getId()).timeWindow(Time.hours(2))
-				.apply(new ReadingAvg());
+		DataStream<Event> limitedSourceStream = env.fromSource(source, WatermarkStrategy
+				.<Event>forMonotonousTimestamps().withTimestampAssigner((element, ts) -> element.getTimestamp()),
+				"limited event source");
+		limitedSourceStream.print();
+
+		DataStream<Double> avgPower = limitedSourceStream.keyBy(point -> point.getId())
+				.window(TumblingEventTimeWindows.of(Duration.ofHours(2))).apply(new ReadingAvg());
 
 		avgPower.print();
 
@@ -40,39 +47,27 @@ public class LimitedEventTester {
 		env.execute("Flink Limited Event Source Example");
 	}
 
-	public static class LimitedEventSource implements SourceFunction<Event> {
-		private static final long serialVersionUID = 1L;
-		private final int maxEvents;
-		private volatile boolean isRunning = true;
-		private LocalDateTime baseTime = LocalDateTime.of(2018, Month.JANUARY, 1, 0, 0);
+	public static class EventGenerator implements GeneratorFunction<Long, Event> {
 
-		public LimitedEventSource(int maxEvents) {
-			this.maxEvents = maxEvents;
-		}
+		static final long serialVersionUID = -7515880035579851892L;
+		private static LocalDateTime baseTime = LocalDateTime.of(2018, Month.JANUARY, 1, 0, 0);
 
 		@Override
-		public void run(SourceContext<Event> ctx) throws Exception {
-			int count = 0;
-			while (isRunning && count < maxEvents) {
+		public Event map(Long value) throws Exception {
+			int vala = value.intValue();
 
-				int id = count % 3;
+			int id = vala % 3;
 
-				if (count % 3 == 0) {
-					//baseTime = baseTime.plusHours(1);
-					baseTime = baseTime.plusMinutes(30);
-				}
-				long time = baseTime.toInstant(ZoneOffset.UTC).toEpochMilli();
-				// System.out.println(time);
-				ctx.collect(new Event(id, count * 2, time));
-				count += 1;
-				// Thread.sleep(10);
+			if (vala % 3 == 0) {
+				// baseTime = baseTime.plusHours(1);
+				baseTime = baseTime.plusMinutes(30);
 			}
+			long time = baseTime.toInstant(ZoneOffset.UTC).toEpochMilli();
+
+			// Thread.sleep(10);
+			return new Event(id, vala * 2, time);
 		}
 
-		@Override
-		public void cancel() {
-			isRunning = false;
-		}
 	}
 
 	static class Event {
@@ -131,7 +126,8 @@ public class LimitedEventTester {
 	}
 
 	public static class ReadingAvg implements WindowFunction<Event, Double, Integer, TimeWindow> {
-		private static final long serialVersionUID = 1L;
+
+		private static final long serialVersionUID = 3705289208219178286L;
 
 		@Override
 		public void apply(Integer key, TimeWindow window, Iterable<Event> input, Collector<Double> out) {
@@ -142,15 +138,4 @@ public class LimitedEventTester {
 
 		}
 	}
-
-	public static class EventMarker extends AscendingTimestampExtractor<Event> {
-
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public long extractAscendingTimestamp(Event event) {
-			return event.getTimestamp();
-		}
-	}
-
 }
