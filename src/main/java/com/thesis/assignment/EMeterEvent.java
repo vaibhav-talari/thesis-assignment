@@ -55,7 +55,7 @@ public class EMeterEvent {
 
 	@Override
 	public String toString() {
-		return this.houseId + ", " + epochToDateTime() + ", " + this.power;
+		return "EMeterEvent [houseId=" + houseId + ", timestamp=" + epochToDateTime() + ", power=" + power + "]";
 	}
 
 }
