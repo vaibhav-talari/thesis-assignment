@@ -31,12 +31,14 @@ public class AssignmentMain {
 		DataStream<EMeterEvent> dataStream = env.fromSource(source, WatermarkStrategy
 				.<EMeterEvent>forMonotonousTimestamps().withTimestampAssigner((element, ts) -> element.getTimestamp()),
 				"energy meter events");
+		//remove after testing
+		dataStream.print();
 
 		DataStream<Double> avgPower = dataStream.keyBy(event -> event.getHouseId())
 				.window(TumblingEventTimeWindows.of(Duration.ofHours(2))).apply(new HouseWindowOperation());
-
-		// execute program
 		avgPower.print();
+		
+		// execute job
 		env.execute("Electricity Reading Stream");
 	}
 }
