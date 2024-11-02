@@ -35,3 +35,13 @@ https://nightlies.apache.org/flink/flink-docs-master/docs/dev/datastream/event-t
 
 ## Data Generation with `GeneratorFunction`
 https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/datastream/datagen/
+
+## CEP patterns refernce 
+https://nightlies.apache.org/flink/flink-docs-master/docs/libs/cep/#combining-patterns
+
+## reference git links
+- https://github.com/metrolinkai/Datorios/tree/main/flink-examples/flink-examples-java
+- https://github.com/CarlosSanabriaM/flink-basics/tree/master
+- https://github.com/apache/flink/blob/master/flink-examples/flink-examples-streaming/src/main/java/org/apache/flink/streaming/examples/statemachine/StateMachineExample.java
+- https://github.com/eleniKougiou/Flink-cep-examples/blob/main/src/main/java/flinkCEP/cases/CEPCase.java
+- https://flink.apache.org/2016/04/06/introducing-complex-event-processing-cep-with-apache-flink/

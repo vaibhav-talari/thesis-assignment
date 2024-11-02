@@ -1,6 +1,7 @@
 package com.thesis.assignment;
 
 import java.time.Duration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import org.apache.flink.cep.CEP;
 import org.apache.flink.cep.PatternStream;
 import org.apache.flink.cep.functions.PatternProcessFunction;
 import org.apache.flink.cep.pattern.Pattern;
+import org.apache.flink.cep.pattern.conditions.IterativeCondition;
 import org.apache.flink.cep.pattern.conditions.SimpleCondition;
 import org.apache.flink.connector.datagen.source.DataGeneratorSource;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -46,28 +48,68 @@ public class AssignmentMain {
 				.window(TumblingEventTimeWindows.of(Duration.ofHours(2))).apply(new HouseWindowOperation());
 		avgPowerStream.print();
 
-		Pattern<OperationContext, ?> start = Pattern.<OperationContext>begin("start").where(new SimpleCondition<>() {
+		// .timesOrMore(3).greedy()
+		Pattern<OperationContext, ?> start = Pattern.<OperationContext>begin("start")
+				.where(new SimpleCondition<OperationContext>() {
 
-			private static final long serialVersionUID = 1L;
+					private static final long serialVersionUID = 1644697500047419226L;
 
-			@Override
-			public boolean filter(OperationContext value) {
-				return value.getAveragePower() > 20;
-			}
-		});
+					@Override
+					public boolean filter(OperationContext value) throws Exception {
+						return value.getAveragePower() > 0;
+					}
 
-		PatternStream<OperationContext> patternStream = CEP.pattern(avgPowerStream, start);
-		System.out.println();
+				}).next("middle").where(new IterativeCondition<OperationContext>() {
 
-		DataStream<CEPContext> result = patternStream
-				.process(new PatternProcessFunction<OperationContext, CEPContext>() {
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public boolean filter(OperationContext value, Context<OperationContext> ctx) throws Exception {
+						int eventCount = 0;
+						int simchec = 0;
+						Iterator<OperationContext> iterator = ctx.getEventsForPattern("start").iterator();
+						OperationContext current = value;
+						// System.out.println("current" + previous);
+						while (iterator.hasNext()) {
+							simchec += 1;
+							OperationContext previous = iterator.next();
+							/// System.out.println("check" + current);
+							if (Double.compare(current.getAveragePower(), previous.getAveragePower()) > 0) {
+								eventCount += 1;
+								current = previous;
+							} else {
+								break;
+							}
+						}
+						// System.out.println("e count" + eventCount);
+						// System.out.println("total" + simchec);
+						if ((eventCount < 0) || (eventCount >= 1)) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+				});
+
+		// SimpleCondition.of(event -> event.getAveragePower() > 20)
+
+		// avgPowerStream should be key
+		PatternStream<OperationContext> patternStream = CEP.pattern(avgPowerStream.keyBy(event -> event.getKey()),
+				start);
+		// System.out.println();
+
+		DataStream<IncreasingAverageAlert> result = patternStream
+				.process(new PatternProcessFunction<OperationContext, IncreasingAverageAlert>() {
 
 					private static final long serialVersionUID = 2556726478885746626L;
 
 					@Override
 					public void processMatch(Map<String, List<OperationContext>> match, Context ctx,
-							Collector<CEPContext> out) throws Exception {
-						out.collect(new CEPContext(match.get("start")));
+							Collector<IncreasingAverageAlert> out) throws Exception {
+						match.get("middle").forEach(dat -> {
+							out.collect(new IncreasingAverageAlert(dat.getKey(), dat.getAveragePower(),
+									dat.getWindowStart(), dat.getWindowEnd()));
+						});
 					}
 				});
 		result.print();
