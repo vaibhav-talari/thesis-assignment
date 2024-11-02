@@ -1,7 +1,6 @@
 package com.thesis.assignment;
 
 import java.time.Duration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -49,41 +48,31 @@ public class AssignmentMain {
 		avgPowerStream.print();
 
 		// .timesOrMore(3).greedy()
-		Pattern<OperationContext, ?> start = Pattern.<OperationContext>begin("start")
-				.where(new SimpleCondition<OperationContext>() {
-
-					private static final long serialVersionUID = 1644697500047419226L;
-
-					@Override
-					public boolean filter(OperationContext value) throws Exception {
-						return value.getAveragePower() > 0;
-					}
-
-				}).next("middle").where(new IterativeCondition<OperationContext>() {
+		Pattern<OperationContext, ?> start = Pattern.<OperationContext>begin("first")
+				.where(SimpleCondition.of(e -> e.getAveragePower() > 0)).next("second")
+				.where(SimpleCondition.of(e -> e.getAveragePower() > 0)).next("third")
+				.where(SimpleCondition.of(e -> e.getAveragePower() > 0)).next("fourth")
+				.where(new IterativeCondition<OperationContext>() {
 
 					private static final long serialVersionUID = 1L;
 
 					@Override
 					public boolean filter(OperationContext value, Context<OperationContext> ctx) throws Exception {
-						int eventCount = 0;
-						int simchec = 0;
-						Iterator<OperationContext> iterator = ctx.getEventsForPattern("start").iterator();
-						OperationContext current = value;
-						// System.out.println("current" + previous);
-						while (iterator.hasNext()) {
-							simchec += 1;
-							OperationContext previous = iterator.next();
-							/// System.out.println("check" + current);
-							if (Double.compare(current.getAveragePower(), previous.getAveragePower()) > 0) {
-								eventCount += 1;
-								current = previous;
-							} else {
-								break;
-							}
-						}
-						// System.out.println("e count" + eventCount);
-						// System.out.println("total" + simchec);
-						if ((eventCount < 0) || (eventCount >= 1)) {
+						//System.out.println("current" + value);
+						//System.out.println("first");
+						//ctx.getEventsForPattern("first").forEach(System.out::println);
+						//System.out.println("second");
+						//ctx.getEventsForPattern("second").forEach(System.out::println);
+						//System.out.println("third");
+						//ctx.getEventsForPattern("third").forEach(System.out::println);
+
+						OperationContext f = ctx.getEventsForPattern("first").iterator().next();
+						OperationContext s = ctx.getEventsForPattern("second").iterator().next();
+						OperationContext t = ctx.getEventsForPattern("third").iterator().next();
+
+						if ((value.getAveragePower() > t.getAveragePower())
+								&& (t.getAveragePower() > s.getAveragePower())
+								&& (s.getAveragePower() > f.getAveragePower())) {
 							return true;
 						} else {
 							return false;
@@ -106,7 +95,7 @@ public class AssignmentMain {
 					@Override
 					public void processMatch(Map<String, List<OperationContext>> match, Context ctx,
 							Collector<IncreasingAverageAlert> out) throws Exception {
-						match.get("middle").forEach(dat -> {
+						match.get("fourth").forEach(dat -> {
 							out.collect(new IncreasingAverageAlert(dat.getKey(), dat.getAveragePower(),
 									dat.getWindowStart(), dat.getWindowEnd()));
 						});
