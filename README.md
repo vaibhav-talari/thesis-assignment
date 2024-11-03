@@ -45,3 +45,4 @@ https://nightlies.apache.org/flink/flink-docs-master/docs/libs/cep/#combining-pa
 - https://github.com/apache/flink/blob/master/flink-examples/flink-examples-streaming/src/main/java/org/apache/flink/streaming/examples/statemachine/StateMachineExample.java
 - https://github.com/eleniKougiou/Flink-cep-examples/blob/main/src/main/java/flinkCEP/cases/CEPCase.java
 - https://flink.apache.org/2016/04/06/introducing-complex-event-processing-cep-with-apache-flink/
+- https://github.com/streaming-with-flink/examples-java/blob/master/src/main/java/io/github/streamingwithflink/
