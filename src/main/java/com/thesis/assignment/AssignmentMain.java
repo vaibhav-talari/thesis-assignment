@@ -27,12 +27,17 @@ public class AssignmentMain {
 			return;
 		}
 
-		// set up the streaming execution environment
+		// set up the streaming execution environment, watermark intervall of 1 second
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		env.getConfig().setAutoWatermarkInterval(1000L);
 
-		// handle arguments
-		Long eventLimit = Long.MAX_VALUE;
+		/* handle arguments
+  		* If no arguments, default parallelism and a default of max long number of events
+    		* If one argument, argument: parallelism degree, using default number of events
+      		* If two arguments, argument 1: parallelism degree, argument 2: number events
+		*/
+		Long eventLimit = Long.MAX_VALUE;  //default
+		
 		if (args.length > 0) {
 			Integer parallelism = Integer.parseInt(args[0]);
 			env.setParallelism(parallelism);
@@ -41,7 +46,7 @@ public class AssignmentMain {
 			}
 		}
 
-		// Data source
+		// Data source generates EmeterEvents stream of size eventLimit
 		DataGeneratorSource<EMeterEvent> source = new DataGeneratorSource<>(new HouseDataGenerator(), eventLimit,
 				TypeInformation.of(EMeterEvent.class));
 
@@ -50,13 +55,18 @@ public class AssignmentMain {
 				.<EMeterEvent>forMonotonousTimestamps().withTimestampAssigner((element, ts) -> element.getTimestamp()),
 				"energy meter events");
 		// remove after testing
-		dataStream.print();
+		//dataStream.print();
 
 		DataStream<OperationContext> avgPowerStream = dataStream.keyBy(event -> event.getHouseId())
 				.window(TumblingEventTimeWindows.of(Duration.ofHours(6))).apply(new HouseWindowOperation());
+		
+		// prints the per household average over the 6h tumbling windonw
 		avgPowerStream.print();
 
-		// .timesOrMore(3).greedy()
+		/* Defining a pattern with three simple conditions and one iterative condition
+  		* Simple conditions keeps track of the latest three power averages for a house-id
+    		* Iterative conditon compares the averages to look for three increasing averages in a row
+		*/
 		Pattern<OperationContext, ?> start = Pattern.<OperationContext>begin("first")
 				.where(SimpleCondition.of(e -> e.getAveragePower() > 0)).next("second")
 				.where(SimpleCondition.of(e -> e.getAveragePower() > 0)).next("third")
@@ -67,18 +77,12 @@ public class AssignmentMain {
 
 					@Override
 					public boolean filter(OperationContext value, Context<OperationContext> ctx) throws Exception {
-						//System.out.println("current" + value);
-						//System.out.println("first");
-						//ctx.getEventsForPattern("first").forEach(System.out::println);
-						//System.out.println("second");
-						//ctx.getEventsForPattern("second").forEach(System.out::println);
-						//System.out.println("third");
-						//ctx.getEventsForPattern("third").forEach(System.out::println);
 
-						OperationContext f = ctx.getEventsForPattern("first").iterator().next();
-						OperationContext s = ctx.getEventsForPattern("second").iterator().next();
-						OperationContext t = ctx.getEventsForPattern("third").iterator().next();
+						OperationContext f = ctx.getEventsForPattern("first").iterator().next(); //event matching the first simple conditon
+						OperationContext s = ctx.getEventsForPattern("second").iterator().next(); //event matching the second simple conditon
+						OperationContext t = ctx.getEventsForPattern("third").iterator().next(); //event matching the third simple conditon
 
+						// checking for three consecutive rising averages
 						if ((value.getAveragePower() > t.getAveragePower())
 								&& (t.getAveragePower() > s.getAveragePower())
 								&& (s.getAveragePower() > f.getAveragePower())) {
@@ -89,13 +93,11 @@ public class AssignmentMain {
 					}
 				});
 
-		// SimpleCondition.of(event -> event.getAveragePower() > 20)
 
-		// avgPowerStream should be key
+		// CEP pattern initialization
 		PatternStream<OperationContext> patternStream = CEP.pattern(avgPowerStream.keyBy(event -> event.getKey()),
 				start);
-		// System.out.println();
-
+		// Performs the matching with the created pattern
 		DataStream<IncreasingAverageAlert> result = patternStream
 				.process(new PatternProcessFunction<OperationContext, IncreasingAverageAlert>() {
 
@@ -110,6 +112,7 @@ public class AssignmentMain {
 						});
 					}
 				});
+		// Prints results of pattern matching
 		result.print();
 
 		// execute job
