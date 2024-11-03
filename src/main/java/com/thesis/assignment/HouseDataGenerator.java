@@ -20,8 +20,8 @@ public class HouseDataGenerator implements GeneratorFunction<Long, EMeterEvent> 
 		//Double power = value * 2d;
 
 		if (id == 0) {
-			// baseTime = baseTime.plusHours(1);
-			baseTime = baseTime.plusMinutes(30);
+			baseTime = baseTime.plusHours(1);
+			//baseTime = baseTime.plusMinutes(30);
 		}
 		long time = baseTime.toInstant(ZoneOffset.UTC).toEpochMilli();
 		return new EMeterEvent(id, time, power);
