@@ -15,14 +15,14 @@ public class HouseDataGenerator implements GeneratorFunction<Long, EMeterEvent> 
 
 	@Override
 	public EMeterEvent map(Long value) throws Exception {
-		Long id = value % 10;
-		Double power = 10.0 + rand.nextDouble() * 20;
-		//Double power = value * 2d;
+		Long id = value % 10; // loops the id over 10 households
+		Double power = 10.0 + rand.nextDouble() * 20; // generate random power reading
 
-		if (id == 0) {
+		// Increments the hour as all households have been processed
+		if (id == 0) { 
 			baseTime = baseTime.plusHours(1);
-			//baseTime = baseTime.plusMinutes(30);
 		}
+	 
 		long time = baseTime.toInstant(ZoneOffset.UTC).toEpochMilli();
 		return new EMeterEvent(id, time, power);
 	}
