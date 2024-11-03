@@ -7,10 +7,13 @@ The exercise:
 - The parallelism degree of the query should be an input parameter.
 
 # Project Structure
+- `AssignmentMain.java`: Main class for the Flink job
 - `EMeterEvent.java`: Java POJO class to represent a stream tuple
 - `HouseDataGenerator`: Stream data generator
 - `HouseDataGeneratorToSocket`: Stream data generator writes to a socket
 - `HouseWindowOperation`: Operation (average calculation) done in time window
+- `IncreasingAverageAlert.java`: Java POJO class to represent an event that matches a CEP pattern
+- `OperationContext.java`: Java POJO class to represent the average value in a window
 - `LimitedEventTester`: Quick Tester class. All helper classes available with in the same class
 
 ## Project Creation
@@ -18,7 +21,23 @@ The exercise:
 
 # Build
 - Create JAR file `mvn clean package`
-- Submit job `./bin/flink run thesis-assignment/target/flink-assignment-1.0.jar 30`
+- Submit job:
+  - Without argument: `./bin/flink run thesis-assignment/target/flink-assignment-1.0.jar`. Generated events default to Long.MAX_VALUE and parallelism default to system.
+  - With single argument: `./bin/flink run thesis-assignment/target/flink-assignment-1.0.jar <parallelism>`. Generated events default to Long.MAX_VALUE.
+  - With two argument: `./bin/flink run thesis-assignment/target/flink-assignment-1.0.jar <parallelism> <no of events>`
+  
+# Sample Output
+Below is a sample output of the program. In this output we see key=7 (household 7) has three increasing power average. The CEP pattern then output the forth event given that the previous three events are increasing average power usage. 
+
+<dl>
+	<dd>...</dd>
+	<dd>OperationContext [key=7, windowStart=2018-01-01 00:00:00, windowEnd=2018-01-01 06:00:00, averagePower=18.115404220598815]</dd>
+	<dd>OperationContext [key=7, windowStart=2018-01-01 06:00:00, windowEnd=2018-01-01 12:00:00, averagePower=22.21840117398105]</dd>
+	<dd>OperationContext [key=7, windowStart=2018-01-01 12:00:00, windowEnd=2018-01-01 18:00:00, averagePower=23.189262533345907]</dd>
+	<dd>OperationContext [key=7, windowStart=2018-01-01 18:00:00, windowEnd=2018-01-02 00:00:00, averagePower=25.329915308959936]</dd>
+	<dd>...</dd>
+	<dd>IncreasingAverageAlert [key=7, power=25.329915308959936, windowStart=2018-01-01 18:00:00, windowEnd=2018-01-02 00:00:00]</dd>
+</dl>
 
 # Flink
 Some useful reference.
