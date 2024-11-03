@@ -15,7 +15,7 @@ public class HouseDataGenerator implements GeneratorFunction<Long, EMeterEvent> 
 
 	@Override
 	public EMeterEvent map(Long value) throws Exception {
-		Long id = value % 3;
+		Long id = value % 10;
 		//Double power = 10 + rand.nextDouble() * 20;
 		Double power = value * 2d;
 
