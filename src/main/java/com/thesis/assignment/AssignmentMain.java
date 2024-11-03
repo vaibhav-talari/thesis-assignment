@@ -44,7 +44,7 @@ public class AssignmentMain {
 		dataStream.print();
 
 		DataStream<OperationContext> avgPowerStream = dataStream.keyBy(event -> event.getHouseId())
-				.window(TumblingEventTimeWindows.of(Duration.ofHours(2))).apply(new HouseWindowOperation());
+				.window(TumblingEventTimeWindows.of(Duration.ofHours(6))).apply(new HouseWindowOperation());
 		avgPowerStream.print();
 
 		// .timesOrMore(3).greedy()
