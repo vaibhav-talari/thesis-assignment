@@ -23,20 +23,24 @@ public class AssignmentMain {
 	public static void main(String[] args) throws Exception {
 		
 		if (args.length > 2) {
-			System.err.println("USAGE:\nStreamingJob <no. of events> <parallelism degree>");
+			System.err.println("USAGE:\nStreamingJob <parallelism degree> <no. of events>");
 			return;
 		}
-		
-		Long eventLimit = Long.parseLong(args[0]);
 
 		// set up the streaming execution environment
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		env.getConfig().setAutoWatermarkInterval(1000L);
-		
-		if (args.length == 2) {
-			Integer parallelism = Integer.parseInt(args[1]);
+
+		// handle arguments
+		Long eventLimit = Long.MAX_VALUE;
+		if (args.length > 0) {
+			Integer parallelism = Integer.parseInt(args[0]);
 			env.setParallelism(parallelism);
+			if( args.length == 2){
+				eventLimit = Long.parseLong(args[1]);
+			}
 		}
+
 		// Data source
 		DataGeneratorSource<EMeterEvent> source = new DataGeneratorSource<>(new HouseDataGenerator(), eventLimit,
 				TypeInformation.of(EMeterEvent.class));
