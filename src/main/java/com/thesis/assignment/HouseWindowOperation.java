@@ -15,9 +15,10 @@ public class HouseWindowOperation implements WindowFunction<EMeterEvent, Operati
 	public void apply(Long key, TimeWindow window, Iterable<EMeterEvent> input, Collector<OperationContext> out)
 			throws Exception {
 
+		// Calculate the average
 		OptionalDouble average = StreamSupport.stream(input.spliterator(), false).mapToDouble(EMeterEvent::getPower)
 				.average();
-
+		// Creates OperationContext object if the average is present
 		average.ifPresent(avg -> {
 			OperationContext context = new OperationContext(key, window.getStart(), window.getEnd(), avg);
 			out.collect(context);
