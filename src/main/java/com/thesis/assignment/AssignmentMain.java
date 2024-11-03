@@ -21,18 +21,22 @@ import org.apache.flink.util.Collector;
 public class AssignmentMain {
 
 	public static void main(String[] args) throws Exception {
-		if (args.length != 2) {
-			System.err.println("USAGE:\nStreamingJob <no. of events>");
+		
+		if (args.length > 2) {
+			System.err.println("USAGE:\nStreamingJob <no. of events> <parallelism degree>");
 			return;
 		}
-
+		
 		Long eventLimit = Long.parseLong(args[0]);
-		Integer parallelism = Integer.parseInt(args[1]);
 
 		// set up the streaming execution environment
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		env.getConfig().setAutoWatermarkInterval(1000L).setParallelism(parallelism);
-		System.out.println("Parallelism: "+env.getParallelism());
+		env.getConfig().setAutoWatermarkInterval(1000L);
+		
+		if (args.length == 2) {
+			Integer parallelism = Integer.parseInt(args[1]);
+			env.setParallelism(parallelism);
+		}
 		// Data source
 		DataGeneratorSource<EMeterEvent> source = new DataGeneratorSource<>(new HouseDataGenerator(), eventLimit,
 				TypeInformation.of(EMeterEvent.class));
