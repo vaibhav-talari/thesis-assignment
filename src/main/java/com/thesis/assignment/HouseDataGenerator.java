@@ -21,6 +21,7 @@ public class HouseDataGenerator implements GeneratorFunction<Long, EMeterEvent> 
 		// Increments the hour as all households have been processed
 		if (id == 0) { 
 			baseTime = baseTime.plusHours(1);
+			Thread.sleep(10); //Limit the data generation speed
 		}
 	 
 		long time = baseTime.toInstant(ZoneOffset.UTC).toEpochMilli();
